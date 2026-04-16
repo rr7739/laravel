@@ -1,0 +1,43 @@
+name: Deploy to FreeHostia
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+
+    - name: Install Composer dependencies
+      run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+    # Skip NPM build as per user (webpack.mix.js exists but not needed now)
+
+    - name: Deploy to FreeHostia via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: freehostia.com
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./
+        server-dir: /www/
+        exclude: |
+          **/.git*
+          **/.github/
+          .env*
+          /node_modules/
+          /storage/
+          /vendor/
+          /bootstrap/cache/*
+          .phpunit.result.cache
+          TODO.md
+        port: 21
+
